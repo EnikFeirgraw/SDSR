@@ -1,27 +1,31 @@
 #!/bin/bash
 
-#Variables
-INDEX=0
-THRESHOLD=1
-PARTITION=($(df -P | awk 'NR>1 {print $6}'))
-USAGE=($(df -P | awk 'NR>1 {print $5}' | sed 's/%//g'))
-EMAIL=(somebody@whatever.mail anotherperson@whatever.mail)
+###User Variables###
+THRESHOLD=70    #Threshold for percentage full on filesystem before emailing
+EMAIL=(somebody@whatever.mail anotherperson@whatever.mail)  #Array of emails to message when threshold is met/exceeded
 
-#Functions
-_email () {
+###Required Variables###
+PARTITION=($(df -P | awk 'NR>1 {print $6}'))    #Grabs the partition names and stores as an array
+USAGE=($(df -P | awk 'NR>1 {print $5}' | sed 's/%//g')) #Grabs the disk usage of each filesystem
+INDEX=0 #Used to match partition to usage rows
+
+###Functions###
+_email () { #Sends email out to required users of high disk usage
 mail -s "$HOSTNAME: ${PARTITION[$INDEX]} is $SPACE% used" ${EMAIL[@]} << EOF
 Your ${PARTITION[INDEX]} partition on $HOSTNAME is using $SPACE% disk usage
 EOF
 }
 
-_echo () {
+_echo () { #Mostly for testing purposes
     echo "$HOSTNAME: ${PARTITION[$INDEX]} is $SPACE% used"
 }
 
-for SPACE in ${USAGE[@]}
+###Main Loop###
+
+for SPACE in ${USAGE[@]}    #Iterates through the USAGE array
 do
-    if [[ $SPACE -ge $THRESHOLD ]]; then
+    if [[ $SPACE -ge $THRESHOLD ]]; then    #If SPACE is greater than or equal to the THRESHOLD... Do the thing
         _echo
     fi
-    let "INDEX++"
+    let "INDEX++"   #Increments the INDEX variable to match the USAGE variable
 done
