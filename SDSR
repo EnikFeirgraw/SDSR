@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#Variables
+INDEX=0
+THRESHOLD=1
+PARTITION=($(df -P | awk 'NR>1 {print $6}'))
+USAGE=($(df -P | awk 'NR>1 {print $5}' | sed 's/%//g'))
+EMAIL=(somebody@whatever.mail anotherperson@whatever.mail)
+
+#Functions
+_email () {
+mail -s "$HOSTNAME: ${PARTITION[$INDEX]} is $SPACE% used" ${EMAIL[@]} << EOF
+Your ${PARTITION[INDEX]} partition on $HOSTNAME is using $SPACE% disk usage
+EOF
+}
+
+_echo () {
+    echo "$HOSTNAME: ${PARTITION[$INDEX]} is $SPACE% used"
+}
+
+for SPACE in ${USAGE[@]}
+do
+    if [[ $SPACE -ge $THRESHOLD ]]; then
+        _echo
+    fi
+    let "INDEX++"
+done
